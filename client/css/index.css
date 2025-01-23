@@ -1,0 +1,62 @@
+:root {
+    --primary: #195bc4;
+    --secondary: #3cffb7;
+    --info: #00d9ff;
+    --danger: #b02a37;
+    --warning: #b98b17;
+
+    --light: #fff;
+    --dark: #000;
+
+    --bs-body-bg: #fcfcfc !important;
+}
+
+.btn-danger {
+    --bs-btn-bg: var(--danger);
+    --bs-btn-border-color: var(--danger);
+    --bs-btn-hover-bg: #b81a1a;
+    --bs-btn-hover-border-color: #b02a37;
+    --bs-btn-active-bg: #b02a37;
+    --bs-btn-active-border-color: #a52834;
+    --bs-btn-disabled-bg: var(--danger);
+    --bs-btn-disabled-border-color: var(--danger);
+}
+
+body,
+html {
+    margin: 0;
+    padding-bottom: 5rem;
+}
+
+
+.box {
+    border-radius: 1em;
+    background-color: rgb(255, 255, 255);
+    box-shadow: 0.1em 0.1em 1em 0em rgba(107, 107, 107, 0.5);
+}
+
+.wallet-address {
+    font-size: 18px;
+    color: var(--secondary);
+    background-color: var(--dark);
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.topbar {
+    background-color: var(--primary);
+}
+
+.footer {
+    bottom: 0;
+    position: fixed;
+    text-align: center;
+    width: 100%;
+    background-color: var(--primary);
+    color: white;
+    font-weight: bold;
+    padding: 1em;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+}

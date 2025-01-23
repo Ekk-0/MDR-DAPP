@@ -1,0 +1,16 @@
+{
+    "name": "mrt-server",
+    "version": "1.0.0",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js"
+    },
+    "author": "Eben Vosloo <ebenvosloo2001@gmail.com>",
+    "license": "MIT",
+    "description": "",
+    "dependencies": {
+        "cors": "^2.8.5",
+        "express": "^4.21.2",
+        "web3": "^4.16.0"
+    }
+}
