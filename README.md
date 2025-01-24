@@ -17,12 +17,12 @@ This is a test project that creates a staking smart contract that allows users t
 ## For Limited Time Live
 To Experience the system please connect to this network
 
-Network Name: Polygon Amoy Testnet
-New RPC URL: https://rpc-amoy.polygon.technology/
-Chain ID: 80002
-Currency Symbol: MATIC
-Block Explorer URL: https://amoy.polygonscan.com/
-Faucet: https://faucet.polygon.technology/
+-Network Name: Polygon Amoy Testnet
+-New RPC URL: https://rpc-amoy.polygon.technology/
+-Chain ID: 80002
+-Currency Symbol: MATIC
+-Block Explorer URL: https://amoy.polygonscan.com/
+-Faucet: https://faucet.polygon.technology/
 
 After that go to the Faucet link and fill your account with some MATIC, you will need it to be able to Receive Medium Rare Tokens (MRT).
 
