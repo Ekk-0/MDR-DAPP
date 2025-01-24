@@ -28,7 +28,7 @@ After that go to the Faucet link and fill your account with some MATIC, you will
 
 Then go to http://64.227.176.240/ to view the website. Click on Request MRT to receive 10 MRT to your current selected MetaMask Account. Then you will be able to enter a amount you want to stake, and wait a few seconds and unstake the amount and you will see that you have gained some interest.
 
-There are also 4 Boxes about the input form.
+There are also 4 Boxes above the input form.
 * One show the total MRT you have to stake.
 * Second one shows the current total MRT that is being staked.
 * Third one shows how much interest your account has gained over its lifetime.
