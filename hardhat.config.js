@@ -8,9 +8,9 @@ module.exports = {
         "localhost": {
             url: "http://127.0.0.1:7545"
         },
-        zkEVM: {
-            url: `https://rpc.cardona.zkevm-rpc.com`,
-            accounts: [process.env.ACCOUNT_PRIVATE_KEY],
+        polygonAmon: {
+            url: `https://rpc-amoy.polygon.technology/`,
+            accounts: [process.env.ACCOUNT_PRIVATE_KEY]
         },
     },
 };
