@@ -762,8 +762,6 @@ const MainController = (() => {
             const txHash = await ethereum.request({
                 method: 'eth_sendTransaction',
                 params: [transactionParameters],
-            }).catch((error) => {
-                console.log(error);
             });
 
             console.log("Transaction Hash:", txHash); // Log the transaction hash for debugging
