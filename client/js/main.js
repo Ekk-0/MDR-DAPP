@@ -435,7 +435,8 @@ const MainController = (() => {
     ];
 
     const contractAddress = '0x1D4Ad2c5D7C28d1eE8b3864C74E302172bAE7430';
-    const API_ENDPOINT = "localhost:3000";
+    const API_ENDPOINT = "64.227.176.240:3000";
+
 
     const DOMStrings = {
         CONNECT_WALLET_BTN: '#connectToMetaMask',
@@ -452,6 +453,8 @@ const MainController = (() => {
 
         STAKE_BTN: '#stakeBtn',
         UNSTAKE_BTN: '#unstakeBtn',
+
+        WALLET_ADDRESS: '.wallet-address'
     }
 
     const local = {
@@ -465,7 +468,7 @@ const MainController = (() => {
         console.log('Inizializing...');
 
         // Listen for account change in MetaMask
-        if (ethereum) {
+        if (window.ethereum) {
             ethereum.on('accountsChanged', (accounts) => {
                 if (accounts.length > 0) {
                     handleAccountChange(accounts[0]);
@@ -483,12 +486,13 @@ const MainController = (() => {
         $(DOMStrings.STAKE_BTN).on('click', handleStake);
         $(DOMStrings.UNSTAKE_BTN).on('click', handleUnstake);
 
-
-        setInterval(async () => {
-            await getAvailableBalance();
-            await getStakedBalance();
-            await getInterestGainedBalance();
-        }, 5000);
+        if (window.ethereum) {
+            setInterval(() => {
+                getAvailableBalance();
+                getStakedBalance();
+                getInterestGainedBalance();
+            }, 5000);
+        }
     }
 
     // Function to handle account change
@@ -498,12 +502,12 @@ const MainController = (() => {
             local.account = newAccount;
 
             // Update UI with the new account
-            $(DOMStrings.ACCOUNT_DIV).html(`<span class="wallet-address">${newAccount.slice(0, 10)}...${newAccount.slice(-6)}</span>`);
+            $(DOMStrings.ACCOUNT_DIV).html(`<span class="wallet-address" title="Wallet Address">${newAccount.slice(0, 10)}...${newAccount.slice(-6)}</span>`);
 
             // Re-fetch balances and other data based on the new account
-            await getAvailableBalance();
-            await getStakedBalance();
-            await getInterestGainedBalance();
+            getAvailableBalance();
+            getStakedBalance();
+            getInterestGainedBalance();
 
             // Optionally, you could update other parts of your app that are tied to the account
             console.log('Account changed to:', newAccount);
@@ -518,7 +522,7 @@ const MainController = (() => {
         if (window.ethereum) {
             const [selectedAccount] = await window.ethereum.request({ method: 'eth_requestAccounts' });
             local.account = selectedAccount;
-            $(DOMStrings.ACCOUNT_DIV).html(`<span class="wallet-address">${selectedAccount.slice(0, 10)}...${selectedAccount.slice(-6)}</span>`);
+            $(DOMStrings.ACCOUNT_DIV).html(`<span class="wallet-address" title="Wallet Address">${selectedAccount.slice(0, 10)}...${selectedAccount.slice(-6)}</span>`);
 
             // Configure Web3 with a provider (e.g., Infura or a local node)
             local.web3 = new Web3(window.ethereum);
@@ -526,13 +530,13 @@ const MainController = (() => {
             local.contract = new local.web3.eth.Contract(contractABI, contractAddress);
 
             // getBalances
-            await getAvailableBalance();
-            await getStakedBalance();
-            await getInterestGainedBalance();
+            getAvailableBalance();
+            getStakedBalance();
+            getInterestGainedBalance();
         } else {
-            swal({
+            Swal.fire({
                 title: 'MetaMask is not installed',
-                text: 'Please install MetaMask to use this feature.',
+                html: '<p>Please install MetaMask to use this feature.</p><a href="https://metamask.io" target="_blank">Click here for more detail</a>',
                 icon: 'warning'
             });
         }
@@ -594,7 +598,7 @@ const MainController = (() => {
 
                 // Safety checks
                 if (amount <= 0) {
-                    swal({
+                    Swal.fire({
                         title: 'Oops...',
                         text: 'Amount needs to be more than 0',
                         icon: 'warning'
@@ -602,13 +606,6 @@ const MainController = (() => {
                     return;
                 }
 
-                // Estimate gas
-                const estimatedGas = await local.contract.methods.stake(local.web3.utils.toWei(amount.toString(), 'ether')).estimateGas({
-                    from: local.account
-                });
-
-                // Add 20% buffer to the gas estimate
-                const gasWithBuffer = (BigInt(estimatedGas) * BigInt(120) / BigInt(100)).toString();
                 // Scale the amount to the smallest unit (assuming 18 decimals for ERC-20 tokens)
                 const scaledAmount = local.web3.utils.toWei(amount.toString(), 'ether');
 
@@ -617,8 +614,17 @@ const MainController = (() => {
                     from: local.account,
                     to: local.contract.options.address,
                     data: local.contract.methods.stake(scaledAmount).encodeABI(),
-                    gas: gasWithBuffer,
                 };
+
+                // Estimate gas
+                const estimatedGas = await ethereum.request({
+                    method: 'eth_estimateGas',
+                    params: [transactionParameters],
+                });
+
+                // Add 20% buffer to the gas estimate
+                const gasWithBuffer = (BigInt(estimatedGas) * BigInt(120) / BigInt(100)).toString();
+                transactionParameters.gas = gasWithBuffer;
 
                 console.log("Transaction Parameters:", transactionParameters);
 
@@ -628,26 +634,22 @@ const MainController = (() => {
                     params: [transactionParameters],
                 });
 
-                swal({
+
+                Swal.fire({
                     title: 'MRT Staked',
                     text: `Successfully staked ${amount} MRT.`,
                     icon: 'success'
                 });
 
             } else {
-                swal({
+                Swal.fire({
                     title: 'Connect MetaMask',
                     text: 'Please connect to metamask to receive your tokens.',
                     icon: 'warning'
                 });
             }
         } catch (err) {
-            console.error('Error:', err);
-            swal({
-                title: err.statusText || 'Transaction Failed',
-                text: err.message || 'An error occurred while processing your transaction. Please try again.',
-                icon: 'error'
-            });
+            handleErrors(err);
         }
     }
 
@@ -659,7 +661,7 @@ const MainController = (() => {
 
                 // Safety checks
                 if (amount <= 0) {
-                    swal({
+                    Swal.fire({
                         title: 'Oops...',
                         text: 'Amount needs to be more than 0',
                         icon: 'warning'
@@ -667,13 +669,6 @@ const MainController = (() => {
                     return;
                 }
 
-                // Estimate gas
-                const estimatedGas = await local.contract.methods.unstake(local.web3.utils.toWei(amount.toString(), 'ether')).estimateGas({
-                    from: local.account
-                });
-
-                // Add 20% buffer to the gas estimate
-                const gasWithBuffer = (BigInt(estimatedGas) * BigInt(120) / BigInt(100)).toString();
                 // Scale the amount to the smallest unit (assuming 18 decimals for ERC-20 tokens)
                 const scaledAmount = local.web3.utils.toWei(amount.toString(), 'ether');
 
@@ -682,8 +677,17 @@ const MainController = (() => {
                     from: local.account,
                     to: local.contract.options.address,
                     data: local.contract.methods.unstake(scaledAmount).encodeABI(),
-                    gas: gasWithBuffer,
                 };
+
+                // Estimate gas
+                const estimatedGas = await ethereum.request({
+                    method: 'eth_estimateGas',
+                    params: [transactionParameters],
+                });
+
+                // Add 20% buffer to the gas estimate
+                const gasWithBuffer = (BigInt(estimatedGas) * BigInt(120) / BigInt(100)).toString();
+                transactionParameters.gas = gasWithBuffer;
 
                 console.log("Transaction Parameters:", transactionParameters);
 
@@ -693,27 +697,23 @@ const MainController = (() => {
                     params: [transactionParameters],
                 });
 
+
                 console.log("Transaction Hash:", txHash); // Log the transaction hash for debugging
 
-                swal({
+                Swal.fire({
                     title: 'MRT Unstaked',
                     text: `Successfully unstaked ${amount} MRT.`,
                     icon: 'success'
                 });
             } else {
-                swal({
+                Swal.fire({
                     title: 'Connect MetaMask',
                     text: 'Please connect to metamask to receive your tokens.',
                     icon: 'warning'
                 });
             }
         } catch (err) {
-            console.error('Error:', err);
-            swal({
-                title: err.statusText || 'Transaction Failed',
-                text: err.message || 'An error occurred while processing your transaction. Please try again.',
-                icon: 'error'
-            });
+            handleErrors(err);
         }
     }
 
@@ -721,7 +721,7 @@ const MainController = (() => {
         try {
             if (!local.account) {
                 // Show warning if MetaMask is not connected
-                swal({
+                Swal.fire({
                     title: 'Connect MetaMask',
                     text: 'Please connect to MetaMask to receive your tokens.',
                     icon: 'warning',
@@ -731,7 +731,7 @@ const MainController = (() => {
 
             if (!local.contract) {
                 // Handle case where contract is not initialized
-                swal({
+                Swal.fire({
                     title: 'Contract Not Found',
                     text: 'Smart contract instance is not initialized. Please try again later.',
                     icon: 'error',
@@ -746,30 +746,79 @@ const MainController = (() => {
                 data: local.contract.methods.requestTokens().encodeABI(),
             };
 
+            // Estimate gas
+            const estimatedGas = await ethereum.request({
+                method: 'eth_estimateGas',
+                params: [transactionParameters],
+            });
+
+            // Add 20% buffer to the gas estimate
+            const gasWithBuffer = (BigInt(estimatedGas) * BigInt(120) / BigInt(100)).toString();
+            transactionParameters.gas = gasWithBuffer;
+
             console.log("Transaction Parameters:", transactionParameters);
 
             // Send the transaction
             const txHash = await ethereum.request({
                 method: 'eth_sendTransaction',
                 params: [transactionParameters],
+            }).catch((error) => {
+                console.log(error);
             });
 
             console.log("Transaction Hash:", txHash); // Log the transaction hash for debugging
 
             // Show success message
-            swal({
+            Swal.fire({
                 title: 'MRT Deposited',
                 text: `Successfully transferred 10 MRT to account ${local.account.slice(0, 4)}...${local.account.slice(-6)}.`,
                 icon: 'success',
             });
         } catch (err) {
-            console.error('Error:', err);
-            swal({
-                title: 'Transaction Failed',
-                text: 'An error occurred while processing your transaction. Please try again.',
-                icon: 'error',
-            });
+            handleErrors(err);
         }
+    };
+
+    const handleErrors = async (err) => {
+        console.error('Error:', err);
+
+        // Default error message
+        let title = 'Transaction Failed';
+        let text = 'An error occurred while processing your transaction. Please try again.';
+
+        // Extract details from the error object
+        if (err && err.message) {
+            if (err.message.includes('Returned error:')) {
+                // Handle Internal JSON-RPC error
+                title = 'RPC Error';
+                text = err.message.replace('Returned error:', '').trim();
+            } else if (err.code === 4001) {
+                // User rejected the transaction
+                title = 'Transaction Rejected';
+                text = 'You rejected the transaction. Please confirm it in your wallet to proceed.';
+            } else if (err.code === -32000) {
+                // Insufficient gas or funds
+                title = 'Transaction Error';
+                text = 'Insufficient gas or funds to complete the transaction. Please check your balance.';
+            } else if (err.code === -32603) {
+                // Internal JSON-RPC error with possible additional details
+                title = 'RPC Error';
+                text = err.message || 'An internal error occurred. Please try again later.';
+                if (err.data && err.data.message) {
+                    text = `${text} Details: ${err.data.message}`;
+                }
+            } else {
+                // Fallback for unhandled errors
+                text = err.message || text;
+            }
+        }
+
+        // Display the error using SweetAlert
+        await Swal.fire({
+            title,
+            text,
+            icon: 'error',
+        });
     };
 
     return {
